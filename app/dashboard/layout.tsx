@@ -1,9 +1,8 @@
 import { auth } from "@/auth";
 import { redirect } from "next/navigation";
-import AppSidebar from "@/components/shared/AppSidebar";
-import { type UserRole } from "@/lib/constants";
+import { SignOutButton } from "@/components/shared/SignOutButton";
 
-export default async function DashboardLayout({
+export default async function DashboardPortalLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -14,17 +13,24 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const user = {
-    name: session.user.name ?? "Team Member",
-    email: session.user.email ?? "",
-    role: ((session.user as any).role as UserRole) ?? "coordinator",
-  };
-
   return (
-    <div className="flex h-screen overflow-hidden bg-zinc-950">
-      <AppSidebar user={user} />
-      <main className="flex-1 overflow-y-auto">
-        <div className="mx-auto max-w-6xl px-6 py-8">{children}</div>
+    <div className="min-h-screen bg-background">
+      <header className="h-14 border-b flex items-center justify-between px-6 bg-card shrink-0 shadow-sm sticky top-0 z-10">
+        <div className="flex items-center gap-2 font-semibold">
+          <div className="w-6 h-6 bg-primary text-primary-foreground rounded flex items-center justify-center text-[10px]">
+            S
+          </div>
+          ScholarFlow
+        </div>
+        <div className="flex items-center gap-4">
+          <span className="text-sm text-muted-foreground">
+            {session.user.name ?? session.user.email}
+          </span>
+          <SignOutButton />
+        </div>
+      </header>
+      <main className="flex-1 p-6">
+        <div className="max-w-6xl mx-auto">{children}</div>
       </main>
     </div>
   );

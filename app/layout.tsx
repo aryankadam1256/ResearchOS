@@ -1,35 +1,41 @@
-import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+﻿import type { Metadata } from "next";
+import { Manrope, IBM_Plex_Mono, Source_Serif_4 } from "next/font/google";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import "./globals.css";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
-  subsets: ["latin"],
+const manrope = Manrope({ 
+  subsets: ["latin"], 
+  variable: "--font-sans",
+  display: "swap" 
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+const ibmPlexMono = IBM_Plex_Mono({ 
+  subsets: ["latin"], 
+  variable: "--font-mono",
+  weight: ["400", "500"],
+  display: "swap" 
+});
+
+const sourceSerif = Source_Serif_4({
   subsets: ["latin"],
+  variable: "--font-serif",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "ResearchOS — Discipline & Intelligence for LLM Research",
-  description:
-    "A full-stack Research OS for LLM research teams. Manage papers, track experiments, enforce discipline, and maintain academic rigor.",
+  title: "Research OS",
+  description: "Operating system for cross-disciplinary research execution.",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
     <html lang="en" className="dark">
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
-        <TooltipProvider delayDuration={150}>
+      <body className={`${manrope.variable} ${ibmPlexMono.variable} ${sourceSerif.variable} font-sans selection:bg-primary/20 selection:text-primary antialiased`}>
+        <TooltipProvider>
           {children}
         </TooltipProvider>
       </body>
