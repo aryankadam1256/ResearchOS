@@ -1,331 +1,235 @@
-"use client";
+﻿"use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { type UserRole } from "@/lib/constants";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Database, FileText, CheckCircle2, Server, FolderSync } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { cn } from "@/lib/utils";
-import { MOCK_TEAM, ROLE_META, PHASES, type UserRole } from "@/lib/constants";
-import {
-  Flame,
-  CheckSquare,
-  FileText,
-  FlaskConical,
-  Eye,
-  ShieldAlert,
-  AlertTriangle,
-  ArrowRight,
-  Sparkles,
-  TrendingUp,
-  Users,
-} from "lucide-react";
-import Link from "next/link";
+import { motion, type Variants } from "framer-motion";
 
 interface DashboardClientProps {
-  user: { name: string; role: UserRole };
+  user: {
+    name: string;
+    role: UserRole;
+  };
 }
 
-function StatCard({
-  title,
-  value,
-  subtitle,
-  icon: Icon,
-  gradient,
-}: {
-  title: string;
-  value: string | number;
-  subtitle: string;
-  icon: React.ComponentType<{ className?: string }>;
-  gradient: string;
-}) {
-  return (
-    <Card className="border-white/[0.06] bg-zinc-900/60 backdrop-blur-sm overflow-hidden relative group hover:border-white/[0.1] transition-all duration-300">
-      <div
-        className={cn(
-          "absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500",
-          gradient
-        )}
-      />
-      <CardContent className="relative p-5">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-wider text-zinc-500">
-              {title}
-            </p>
-            <p className="mt-1.5 text-2xl font-bold text-zinc-50">{value}</p>
-            <p className="mt-0.5 text-xs text-zinc-500">{subtitle}</p>
-          </div>
-          <div className="rounded-lg bg-white/[0.05] p-2.5">
-            <Icon className="h-5 w-5 text-zinc-400" />
-          </div>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
-
-function QuickCheckin() {
-  const [summary, setSummary] = useState("");
-  const [roadblock, setRoadblock] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const wordCount = summary.trim().split(/\s+/).filter(Boolean).length;
-
-  if (submitted) {
-    return (
-      <Card className="border-emerald-500/20 bg-emerald-950/20 backdrop-blur-sm">
-        <CardContent className="flex items-center gap-3 p-5">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20">
-            <Sparkles className="h-5 w-5 text-emerald-400" />
-          </div>
-          <div>
-            <p className="font-medium text-emerald-300">Check-in submitted!</p>
-            <p className="text-sm text-emerald-400/60">
-              Your activity has been logged on the heatmap.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    );
+const containerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.1 }
   }
+};
 
-  return (
-    <Card className="border-white/[0.06] bg-zinc-900/60 backdrop-blur-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <CheckSquare className="h-4 w-4 text-indigo-400" />
-          Daily Proof of Progress
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        <div>
-          <Textarea
-            placeholder="What did you accomplish today? (100 words max)"
-            value={summary}
-            onChange={(e) => setSummary(e.target.value)}
-            className="min-h-[80px] resize-none border-white/[0.08] bg-white/[0.03] text-zinc-200 placeholder:text-zinc-600 focus:border-indigo-500/50"
-          />
-          <p
-            className={cn(
-              "mt-1 text-xs",
-              wordCount > 100 ? "text-red-400" : "text-zinc-600"
-            )}
-          >
-            {wordCount}/100 words
-          </p>
-        </div>
-        <Textarea
-          placeholder="Any roadblocks? (optional)"
-          value={roadblock}
-          onChange={(e) => setRoadblock(e.target.value)}
-          className="min-h-[50px] resize-none border-white/[0.08] bg-white/[0.03] text-zinc-200 placeholder:text-zinc-600 focus:border-indigo-500/50"
-        />
-        <Button
-          onClick={() => setSubmitted(true)}
-          disabled={wordCount === 0 || wordCount > 100}
-          className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white shadow-lg shadow-indigo-500/20"
-        >
-          Submit Check-in
-        </Button>
-      </CardContent>
-    </Card>
-  );
-}
-
-function PhaseProgress() {
-  const currentPhaseIdx = 1;
-  const signoffs = 3;
-  const total = 5;
-
-  return (
-    <Card className="border-white/[0.06] bg-zinc-900/60 backdrop-blur-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center justify-between text-base">
-          <span className="flex items-center gap-2">
-            <TrendingUp className="h-4 w-4 text-indigo-400" />
-            Phase Progress
-          </span>
-          <Link href="/dashboard/phases">
-            <Badge
-              variant="outline"
-              className="border-white/[0.08] text-zinc-500 hover:bg-white/[0.04] cursor-pointer text-[10px]"
-            >
-              View All <ArrowRight className="ml-1 h-3 w-3" />
-            </Badge>
-          </Link>
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3">
-        {PHASES.map((phase, idx) => {
-          const isActive = idx === currentPhaseIdx;
-          const isCompleted = idx < currentPhaseIdx;
-          const isLocked = idx > currentPhaseIdx;
-
-          return (
-            <div
-              key={phase.name}
-              className={cn(
-                "flex items-center gap-3 rounded-lg px-3 py-2 transition-all",
-                isActive && "bg-indigo-500/10 border border-indigo-500/20",
-                isCompleted && "opacity-60",
-                isLocked && "opacity-30"
-              )}
-            >
-              <span className="text-sm">{phase.icon}</span>
-              <span
-                className={cn(
-                  "flex-1 text-sm",
-                  isActive ? "text-zinc-200 font-medium" : "text-zinc-500"
-                )}
-              >
-                {phase.label}
-              </span>
-              {isActive && (
-                <span className="text-xs text-indigo-400">
-                  {signoffs}/{total} signed
-                </span>
-              )}
-              {isCompleted && (
-                <span className="text-xs text-emerald-500">✓</span>
-              )}
-              {isLocked && <span className="text-xs text-zinc-700">🔒</span>}
-            </div>
-          );
-        })}
-      </CardContent>
-    </Card>
-  );
-}
-
-function ActionItems() {
-  const items = [
-    { text: "Review blind draft #3", due: "Due Friday", urgent: false, icon: Eye },
-    { text: "Sign off on Methodology", due: "2/5 remaining", urgent: true, icon: CheckSquare },
-    { text: "You're Red Team critic this week", due: "Submit by Sunday", urgent: false, icon: ShieldAlert },
-  ];
-
-  return (
-    <Card className="border-white/[0.06] bg-zinc-900/60 backdrop-blur-sm">
-      <CardHeader className="pb-3">
-        <CardTitle className="flex items-center gap-2 text-base">
-          <AlertTriangle className="h-4 w-4 text-amber-400" />
-          Action Items
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {items.map((item, idx) => (
-          <div
-            key={idx}
-            className={cn(
-              "flex items-center gap-3 rounded-lg px-3 py-2.5 transition-all hover:bg-white/[0.03]",
-              item.urgent && "border border-amber-500/20 bg-amber-500/5"
-            )}
-          >
-            <item.icon
-              className={cn(
-                "h-4 w-4 shrink-0",
-                item.urgent ? "text-amber-400" : "text-zinc-600"
-              )}
-            />
-            <div className="flex-1 min-w-0">
-              <p className="text-sm text-zinc-300 truncate">{item.text}</p>
-              <p className="text-xs text-zinc-600">{item.due}</p>
-            </div>
-          </div>
-        ))}
-      </CardContent>
-    </Card>
-  );
-}
-
-function GhostAlert() {
-  const ghosting = MOCK_TEAM.filter((m) => !m.isOnline);
-  if (ghosting.length === 0) return null;
-
-  return (
-    <Card className="border-red-500/20 bg-red-950/10 backdrop-blur-sm">
-      <CardContent className="flex items-center gap-3 p-4">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-red-500/20">
-          <AlertTriangle className="h-4 w-4 text-red-400" />
-        </div>
-        <div className="flex-1">
-          <p className="text-sm font-medium text-red-300">
-            {ghosting.map((m) => m.name).join(", ")}{" "}
-            {ghosting.length === 1 ? "hasn't" : "haven't"} checked in today
-          </p>
-          <p className="text-xs text-red-400/60">
-            Consider a nudge to keep the momentum going.
-          </p>
-        </div>
-      </CardContent>
-    </Card>
-  );
-}
+const itemVariants: Variants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { 
+    opacity: 1, 
+    y: 0,
+    transition: { type: "spring" as const, stiffness: 300, damping: 24 }
+  }
+};
 
 export default function DashboardClient({ user }: DashboardClientProps) {
-  const roleMeta = ROLE_META[user.role] ?? ROLE_META["coordinator"];
-  const now = new Date();
-  const greeting =
-    now.getHours() < 12
-      ? "Good morning"
-      : now.getHours() < 17
-        ? "Good afternoon"
-        : "Good evening";
+  const [isLoaded, setIsLoaded] = useState(false);
+
+  useEffect(() => {
+    setIsLoaded(true);
+  }, []);
+
+  if (!isLoaded) return null;
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight text-zinc-50">
-          {greeting}, {user.name}{" "}
-          <span className="text-lg">{roleMeta.emoji}</span>
-        </h1>
-        <p className="mt-1 text-sm text-zinc-500">
-          Here&apos;s what&apos;s happening with your research team today.
-        </p>
-      </div>
-
-      <GhostAlert />
-
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-        <StatCard
-          title="Team Streak"
-          value="12 days"
-          subtitle="All 5 members checked in"
-          icon={Flame}
-          gradient="bg-gradient-to-br from-orange-500/5 to-transparent"
-        />
-        <StatCard
-          title="Papers"
-          value={47}
-          subtitle="8 added this week"
-          icon={FileText}
-          gradient="bg-gradient-to-br from-sky-500/5 to-transparent"
-        />
-        <StatCard
-          title="Experiments"
-          value={23}
-          subtitle="156 total runs logged"
-          icon={FlaskConical}
-          gradient="bg-gradient-to-br from-amber-500/5 to-transparent"
-        />
-        <StatCard
-          title="Online Now"
-          value={`${MOCK_TEAM.filter((m) => m.isOnline).length}/${MOCK_TEAM.length}`}
-          subtitle="Team members present"
-          icon={Users}
-          gradient="bg-gradient-to-br from-emerald-500/5 to-transparent"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
-        <div className="space-y-6 lg:col-span-3">
-          <QuickCheckin />
-          <ActionItems />
+    <motion.div 
+      className="space-y-7 px-2 pb-12 pt-2"
+      variants={containerVariants}
+      initial="hidden"
+      animate="show"
+    >
+      {/* Header Section */}
+      <motion.div variants={itemVariants} className="mb-6 flex flex-col justify-between gap-4 md:flex-row md:items-end">
+        <div className="space-y-1.5">
+          <motion.h1 
+            className="text-3xl font-semibold text-foreground lg:text-4xl"
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            Research Command
+          </motion.h1>
+          <motion.p 
+            className="max-w-2xl text-base text-muted-foreground"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            Welcome back, {user.name}. You are currently viewing cross-disciplinary analytics and active workstreams.
+          </motion.p>
         </div>
-        <div className="lg:col-span-2">
-          <PhaseProgress />
-        </div>
+        <motion.div 
+          className="flex cursor-pointer items-center gap-3 rounded-lg border border-border/80 bg-card px-4 py-2.5 shadow-sm transition-colors hover:bg-muted/50"
+          whileHover={{ scale: 1.02 }}
+          whileTap={{ scale: 0.98 }}
+        >
+           <FolderSync className="w-4 h-4 text-muted-foreground" />
+           <span className="text-sm font-medium">Context: Clinical Trial Alpha</span>
+        </motion.div>
+      </motion.div>
+
+      {/* Main Layout Grid - Reordered and restructured */}
+      <div className="grid grid-cols-1 gap-6 xl:grid-cols-12">
+        
+        {/* Left Column (Stats & Upcoming Constraints) - 4 SPAN */}
+        <motion.div variants={itemVariants} className="space-y-6 xl:col-span-4">
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <motion.div whileHover={{ y: -2 }}>
+              <Card className="h-full border-border/80 shadow-sm transition-all hover:shadow-md">
+                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Data Processing</CardTitle>
+                  <Server className="h-4 w-4 text-primary opacity-70" />
+                </CardHeader>
+                <CardContent>
+                  <div className="font-mono text-2xl font-semibold">84.2%</div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                    <span className="text-emerald-500 font-medium">Optimal</span> threshold
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+            
+            <motion.div whileHover={{ y: -2 }}>
+              <Card className="h-full border-border/80 shadow-sm transition-all hover:shadow-md">
+                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Active Datasets</CardTitle>
+                  <Database className="h-4 w-4 text-primary opacity-70" />
+                </CardHeader>
+                <CardContent>
+                  <div className="font-mono text-2xl font-semibold">14</div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                    <span className="text-emerald-500 font-medium">3 sets</span> pending cleaning
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div whileHover={{ y: -2 }}>
+              <Card className="h-full border-border/80 shadow-sm transition-all hover:shadow-md">
+                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                  <CardTitle className="text-sm font-medium text-muted-foreground">Drafts in Review</CardTitle>
+                  <FileText className="h-4 w-4 text-primary opacity-70" />
+                </CardHeader>
+                <CardContent>
+                  <div className="font-mono text-2xl font-semibold">03</div>
+                  <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
+                    Pending peer methodology
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+
+            <motion.div whileHover={{ y: -2 }}>
+              <Card className="group relative h-full overflow-hidden border-primary/30 shadow-sm transition-all">
+                <div className="absolute inset-0 bg-primary/5 group-hover:bg-primary/10 transition-colors" />
+                <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0 relative z-10">
+                  <CardTitle className="text-sm font-medium text-primary">Milestone Lock</CardTitle>
+                  <CheckCircle2 className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent className="relative z-10">
+                  <div className="text-2xl font-semibold text-primary">On Target</div>
+                  <p className="text-xs text-primary/80 mt-1 font-medium">
+                    Phase 3 unlocks in 5 days
+                  </p>
+                </CardContent>
+              </Card>
+            </motion.div>
+          </div>
+
+          <div className="pt-4">
+             <div className="mb-4 flex items-center justify-between">
+               <h2 className="text-lg font-semibold">Project Constraints</h2>
+             </div>
+             <div className="space-y-3">
+              <motion.div 
+                whileHover={{ scale: 1.01, x: 2 }}
+                className="flex cursor-pointer flex-col rounded-xl border border-destructive/20 bg-card p-4 shadow-sm transition-colors hover:border-destructive/50"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <Badge variant="destructive" className="font-medium text-[10px]">Critical</Badge>
+                  <span className="text-xs font-semibold text-destructive font-mono">T-Minus 48h</span>
+                </div>
+                <h3 className="font-medium text-sm">Grant Proposal Submission</h3>
+                <p className="text-xs text-muted-foreground mt-1">Requires digital sign-off from all Principal Investigators.</p>
+              </motion.div>
+
+              <motion.div 
+                whileHover={{ scale: 1.01, x: 2 }}
+                className="flex cursor-pointer flex-col rounded-xl border border-border/80 bg-card p-4 shadow-sm transition-colors hover:border-amber-500/50"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <Badge variant="secondary" className="font-medium text-[10px] bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 shadow-none border-0">Warning</Badge>
+                  <span className="text-xs font-semibold font-mono">5 Days</span>
+                </div>
+                <h3 className="font-medium text-sm">Phase 1 Protocol Freeze</h3>
+                <p className="text-xs text-muted-foreground mt-1">Stop modifying the base methodology and finalize experimental variables.</p>
+              </motion.div>
+             </div>
+          </div>
+        </motion.div>
+
+        {/* Right Column (Focus / Feeds) - 8 SPAN */}
+        <motion.div variants={itemVariants} className="rounded-2xl border border-border/80 bg-muted/30 p-6 lg:p-8 xl:col-span-8">
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-semibold">Active Workstream Log</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Latest updates across all connected multi-disciplinary modules.</p>
+            </div>
+            <div className="flex gap-2">
+              <Badge variant="outline" className="bg-background text-[10px] uppercase tracking-[0.08em] shadow-sm">Sync Active</Badge>
+            </div>
+          </div>
+          
+          <div className="space-y-6 relative before:absolute before:inset-0 before:ml-5 before:-translate-x-px before:h-full before:w-0.5 before:bg-gradient-to-b before:from-transparent before:via-border/80 before:to-transparent">
+            
+            {[
+              { init: "JB", title: "Dataset Alpha Validated", time: "14:02 PM", desc: "Data collection phase complete. Evaluated 150k samples. Outliers removed. Proceeding to main statistical analysis phase.", border: "border-primary", bg: "bg-primary text-primary-foreground" },
+              { init: "AK", title: "Literature Review Merged", time: "09:15 AM", desc: "Merged 14 new citations regarding prior behavioral trials. The Introduction section draft is now fully referenced and ready for peer evaluation.", border: "border-secondary", bg: "bg-secondary text-secondary-foreground" },
+              { init: "PR", title: "Equipment Alert", time: "Yesterday", desc: "High resource usage detected on Cluster Array-7 during batch analysis. Restarting sub-routines to manage memory overflow.", border: "border-secondary", bg: "bg-secondary text-secondary-foreground", descColor: "text-destructive/90" },
+              { init: "SYS", title: "Protocol Automated Check", time: "Feb 12", desc: "Routine compliance and ethics constraint checker executed. No violations found in standard operational procedures.", border: "border-secondary", bg: "bg-muted text-muted-foreground border border-border" }
+            ].map((item, i) => (
+              <motion.div 
+                key={i}
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                viewport={{ once: true, margin: "-20px" }}
+                transition={{ duration: 0.4, delay: i * 0.1 }}
+                className="relative flex items-start gap-6 group"
+              >
+                <div className="relative pt-1 pl-1">
+                  <motion.div 
+                    whileHover={{ scale: 1.1 }}
+                    className={"flex items-center justify-center w-10 h-10 rounded-full border-4 border-background shadow-sm shrink-0 z-10 text-xs font-semibold relative " + item.bg}
+                  >
+                    {item.init}
+                  </motion.div>
+                </div>
+                <div className="flex-1 rounded-xl border border-border/80 bg-card p-5 shadow-sm transition-all hover:shadow-md">
+                  <div className="mb-2 flex items-center justify-between">
+                    <div className="font-semibold text-sm">{item.title}</div>
+                    <time className="font-mono text-xs text-muted-foreground">{item.time}</time>
+                  </div>
+                  <div className={"text-sm " + (item.descColor || "text-muted-foreground")}>
+                    {item.desc}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+
+          </div>
+        </motion.div>
+
       </div>
-    </div>
+    </motion.div>
   );
 }
